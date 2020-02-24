@@ -7,11 +7,28 @@ from flask import request, jsonify
 
 from db import session
 from apiapp.models import TUser
+from common import code_
 
 blue = Blueprint('user_api', __name__)
 
 
-@blue.route('/regist/', methods=['GET', 'POST'])
+@blue.route('/code/', methods=['GET'])
+def get_code():
+    phone = request.args.get('phone')
+    if phone:
+        code_.send_code(phone)
+        return jsonify({
+            'state': 0,
+            'msg': '验证码已发送'
+        })
+
+    return jsonify({
+        'state': 1,
+        'msg': '手机号不能为空'
+    })
+
+
+@blue.route('/regist/', methods=['POST'])
 def regist():
     # 要求JSON数据格式：
     valid_fields = {"name", "phone", "code", "auth_str"}
@@ -25,8 +42,12 @@ def regist():
 
     # 验证参数的完整性
     if set(data.keys()) == valid_fields:
-
         # 验证输入的验证码是否正确
+        if not code_.valid_code(data['phone'], data['code']):
+            return jsonify({
+                'state': 2,
+                'msg': '验证码输入错误，请确认输入的验证码'
+            })
 
         user = TUser()
         user.name = data.get('name')
