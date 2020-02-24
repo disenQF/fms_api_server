@@ -1,13 +1,17 @@
 #!/usr/bin/python3
 # coding: utf-8
+import hashlib
+import uuid
 from datetime import datetime
 
 from flask import Blueprint
 from flask import request, jsonify
+from sqlalchemy import or_, and_, not_
 
 from db import session
 from apiapp.models import TUser
-from common import code_
+from common import code_, cache_, token_
+from . import validate_json, validate_params
 
 blue = Blueprint('user_api', __name__)
 
@@ -39,7 +43,6 @@ def regist():
             'msg': '必须提供json格式的参数'
         })
 
-
     # 验证参数的完整性
     if set(data.keys()) == valid_fields:
         # 验证输入的验证码是否正确
@@ -58,6 +61,12 @@ def regist():
         session.add(user)
         session.commit()
 
+        # 向前端返回信息中，包含一个与用户匹配的token(有效时间为一周)
+        # 1. 基于uuid+user_id生成token
+        # 2. 将token和user_id保存到缓存（cache_.save_token(token, user_id)）
+        # JWT 单点授权登录
+        token = token_.gen_token(user.user_id)
+        cache_.add_token(token, user.user_id)
     else:
         return jsonify({
             'state': 1,
@@ -66,6 +75,78 @@ def regist():
 
     return jsonify({
         'state': 0,
-        'msg': '注册成功',
-        'data': data
+        'msg': '注册并登录成功',
+        'token': token
+    })
+
+
+@blue.route('/login/', methods=['POST'])
+def login():
+    resp = validate_json()
+    if resp: return resp
+
+    resp = validate_params('phone', 'auth_str')
+    if resp: return resp
+
+    data = request.get_json()
+    try:
+        user = session.query(TUser).filter(or_(TUser.phone == data['phone'],
+                                               TUser.name == data['phone']),
+                                           TUser.auth_string == data['auth_str']).one()
+
+        token = token_.gen_token(user.user_id)
+        cache_.add_token(token, user.user_id)
+
+        return jsonify({
+            'state': 0,
+            'msg': '登录成功',
+            'token': token
+        })
+    except:
+        pass
+
+    return jsonify({
+        'state': 4,
+        'msg': '用户名或口令输入错误',
+    })
+
+
+@blue.route('/modify_auth/', methods=['POST'])
+def modify_auth():
+    resp = validate_json()
+    if resp: return resp
+
+    resp = validate_params('new_auth_str', 'auth_str', 'token')
+    if resp: return resp
+
+    data = request.get_json()
+
+    try:
+        user_id = cache_.get_user_id(data['token'])
+        if not user_id:
+            jsonify({
+                'state': 3,
+                'msg': '登录已期，需要重新登录并获取新的token',
+            })
+
+        user = session.query(TUser).get(int(user_id))
+        if user.auth_string == data['auth_str']:
+            user.auth_string = data['new_auth_str']
+            session.add(user)
+            session.commit()
+
+            return jsonify({
+                'state': 0,
+                'msg': '修改成功'
+            })
+        return jsonify({
+            'state': 4,
+            'msg': '原口令不正确'
+        })
+    except:
+        pass
+
+    return jsonify({
+        'state': 3,
+        'msg': 'token已无效，尝试重新登录',
     })
