@@ -4,7 +4,7 @@ import hashlib
 import uuid
 from datetime import datetime
 
-from flask import Blueprint
+from flask import Blueprint, Response
 from flask import request, jsonify
 from sqlalchemy import or_, and_, not_
 
@@ -97,11 +97,15 @@ def login():
         token = token_.gen_token(user.user_id)
         cache_.add_token(token, user.user_id)
 
-        return jsonify({
+        resp: Response = jsonify({
             'state': 0,
             'msg': '登录成功',
             'token': token
         })
+
+        # 设置响应对象的cookie，向客户端响应cookie
+        resp.set_cookie('token', token)
+        return resp
     except:
         pass
 
