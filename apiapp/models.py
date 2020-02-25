@@ -2,11 +2,7 @@
 from sqlalchemy import Column, DateTime, Float, ForeignKey, Index, Integer, MetaData, String, Table, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import FetchedValue
-from sqlalchemy.ext.declarative import declarative_base
-
-
-Base = declarative_base()
-metadata = Base.metadata
+from db import Base, metadata
 
 
 class TBlockSetting(Base):
@@ -36,7 +32,8 @@ class TFile(Base):
     note = Column(Text)
     file_path = Column(String(200))
 
-    user = relationship('TUser', primaryjoin='TFile.user_id == TUser.user_id', backref='t_files')
+    # lazy = 'select' 表示查看属性时，才会执行selet查询语句, 如果是immediate 表示同当前所在的模型数据一起查询出来。
+    user = relationship('TUser', primaryjoin='TFile.user_id == TUser.user_id', backref='t_files', lazy='select')
 
 
 

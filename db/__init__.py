@@ -3,6 +3,11 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.declarative import declarative_base
+
+
+Base = declarative_base()
+metadata = Base.metadata
 
 # yyserver1是在 {C:/windows/System32/drivers}/etc/hosts中配置域名
 engine = create_engine('mysql+pymysql://root:root@yyserver1:3307/fms')
