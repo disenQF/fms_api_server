@@ -37,6 +37,7 @@ def list_files():
         'msg': '没有数据'
     })
 
+
 @blue.route('/images/', methods=['GET'])
 def list_images():
     user_id = cache_.get_user_id(request.args.get('token'))
