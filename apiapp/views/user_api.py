@@ -195,6 +195,9 @@ def upload_head():
     # 将头像的URL 存到 redis中
     cache_.save_head_url(user.head, head_url)
 
+    # 删除临时的文件
+    os.remove(save_file_path)
+
     return jsonify({
         'state': 0,
         'msg': '上传成功',
