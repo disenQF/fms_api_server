@@ -27,7 +27,7 @@ def upload_head(user_id, file_name, file_path):
         return bucket.sign_url('GET', key, 3600 * 24 * 7, params={'x-oss-process': small_style})
 
 
-def get_oss_img_url(user_id, file_name):
+def get_oss_img_url(key):
     bucket = get_bucket()
-    key = f'head/{user_id}-{file_name}'
-    return bucket.sign_url('GET', key, 3600 * 24 * 7, params={'x-oss-process': small_style})
+    return bucket.sign_url('GET', f'head/{key}',
+                           3600 * 24 * 7, params={'x-oss-process': small_style})

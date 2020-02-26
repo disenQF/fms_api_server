@@ -12,7 +12,7 @@ base_url = f'http://{HOST}:{PORT}'
 
 data = {
     'phone': '17602931841',
-    'token': 'a90ea1b74dae62f8430ef346774094ee'
+    'token': 'd9647c2489b9b11a63832fc8b6d3e020'
 }
 
 
@@ -53,4 +53,12 @@ class TestUserApi(TestCase):
         })
         resp_data = resp.json()
         print(resp_data)
+
+    def test_e_upload_head(self):
+        url = base_url+"/api/upload_head/"
+        resp = requests.post(url, files={
+            'head': ('mm6.jpg', open('mm6.jpg', 'rb'), 'image/jpeg')
+        }, cookies={'token': data['token']})
+
+        print(resp.json())
 

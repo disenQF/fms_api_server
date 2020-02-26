@@ -18,3 +18,12 @@ def add_token(token, user_id):
 def get_user_id(token):
     # API接口操作时，需要通过接口中token参数获取登录的用户信息
     return rd.get(token)
+
+
+# ------用户头像的缓存-----
+def save_head_url(key, url):
+    rd.set(key, url, ex=3600 * 7 * 24)
+
+
+def get_head_url(key):
+    return rd.get(key)
