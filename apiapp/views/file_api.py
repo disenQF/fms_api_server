@@ -19,7 +19,7 @@ from common.serializor import to_json
 blue = Blueprint('file_api', __name__)
 
 
-@blue.route('/list/', methods=['GET'])
+@blue.route('/files/', methods=['GET'])
 def list_files():
     user_id = cache_.get_user_id(request.args.get('token'))
     if user_id:
